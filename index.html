@@ -9,9 +9,410 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    :root{
+      --bg:#f5f5f7;--surface:#fbfbfd;--surface-2:#ffffff;--surface-3:#eef0f4;--text:#1d1d1f;--muted:#6e6e73;--faint:#a1a1a6;
+      --primary:#0071e3;--primary-hover:#005fc2;--success:#32d74b;--success-soft:rgba(50,215,75,.14);--danger:#ff6b6b;
+      --border:rgba(29,29,31,.08);--shadow:0 12px 40px rgba(0,0,0,.08);--radius:28px;--radius-sm:18px;--space:24px;
+    }
+    [data-theme="dark"]{
+      --bg:#000000;--surface:#111214;--surface-2:#1c1c1e;--surface-3:#2a2a2d;--text:#f5f5f7;--muted:#98989d;--faint:#636366;
+      --primary:#0a84ff;--primary-hover:#409cff;--success:#30d158;--success-soft:rgba(48,209,88,.14);--danger:#ff7b72;
+      --border:rgba(255,255,255,.08);--shadow:0 20px 50px rgba(0,0,0,.35);
+    }
+    *{box-sizing:border-box} html,body{margin:0;padding:0} body{font-family:Inter,system-ui,sans-serif;background:radial-gradient(circle at top left, rgba(10,132,255,.12), transparent 24%), radial-gradient(circle at bottom right, rgba(48,209,88,.08), transparent 20%), var(--bg);color:var(--text);line-height:1.5}
+    a{color:inherit;text-decoration:none} button,input,textarea{font:inherit}
+    .shell{display:grid;grid-template-columns:230px 1fr;min-height:100vh}
+    .sidebar{position:sticky;top:0;height:100vh;padding:24px;background:rgba(17,18,20,.7);backdrop-filter:blur(24px);border-right:1px solid var(--border);display:flex;flex-direction:column;gap:24px}
+    .brand{display:flex;align-items:center;gap:12px}.logo{width:40px;height:40px;border-radius:14px;background:linear-gradient(145deg,var(--primary),#6fb6ff);box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 12px 24px rgba(10,132,255,.24);display:grid;place-items:center;font-weight:800;color:white}
+    .brand h1{font-size:14px;line-height:1.2;margin:0}.brand span{display:block;color:var(--muted);font-size:12px;margin-top:4px}
+    .nav{display:grid;gap:8px}.nav a{padding:14px 16px;border-radius:16px;color:var(--muted);background:transparent;border:1px solid transparent;cursor:pointer}.nav a.active,.nav a:hover{background:rgba(10,132,255,.1);color:var(--text);border-color:rgba(10,132,255,.18)}
+    .theme-toggle{margin-top:auto;padding:10px 12px;border-radius:999px;border:1px solid var(--border);background:var(--surface-2);color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .switch-track{width:52px;height:32px;border-radius:999px;background:rgba(255,255,255,.1);padding:4px;display:flex;align-items:center;transition:.25s ease}
+    .switch-thumb{width:24px;height:24px;border-radius:999px;background:linear-gradient(180deg,#ffe082,#ffbf3f);display:grid;place-items:center;font-size:12px;transform:translateX(0);transition:.25s ease;box-shadow:0 6px 16px rgba(0,0,0,.25)}
+    [data-theme="light"] .switch-track{background:rgba(10,132,255,.18)} [data-theme="light"] .switch-thumb{transform:translateX(20px)}
+    .switch-label{font-size:13px;color:var(--muted);font-weight:700}
+    .main{padding:24px;display:grid;gap:24px}
+    .grid-2{display:grid;grid-template-columns:1.1fr .9fr;gap:24px}
+    .card{background:rgba(28,28,30,.82);backdrop-filter:blur(28px);border:1px solid var(--border);box-shadow:var(--shadow);border-radius:var(--radius);padding:24px}
+    [data-theme="light"] .sidebar{background:rgba(251,251,253,.74)} [data-theme="light"] .card{background:rgba(251,251,253,.86)}
+    .eyebrow{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:12px}
+    .hero-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}
+    .hero h2{font-size:clamp(2.4rem,2rem + 1.3vw,4rem);line-height:1.03;letter-spacing:-.07em;max-width:11ch;margin:0}
+    .live-pill{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;background:rgba(48,209,88,.14);color:#baf7c4;border:1px solid rgba(48,209,88,.28);font-size:13px;font-weight:700;animation:livepulse 1.8s infinite}
+    .live-dot{width:8px;height:8px;border-radius:999px;background:var(--success);box-shadow:0 0 0 0 rgba(48,209,88,.8);animation:ring 1.8s infinite}
+    @keyframes ring{0%{box-shadow:0 0 0 0 rgba(48,209,88,.7)}70%{box-shadow:0 0 0 10px rgba(48,209,88,0)}100%{box-shadow:0 0 0 0 rgba(48,209,88,0)}}
+    @keyframes livepulse{50%{transform:translateY(-1px)}}
+    .hero-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:24px}
+    .metric{padding:18px;border-radius:22px;background:var(--surface-2);border:1px solid var(--border)}
+    .metric span{display:block;font-size:12px;color:var(--muted);margin-bottom:10px}.metric strong{font-size:1.4rem;letter-spacing:-.04em}
+    .hero-visual{display:grid;gap:16px}
+    .readiness-card,.quest-card{padding:20px;border-radius:24px;background:var(--surface-2);border:1px solid var(--border)}
+    .score-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}.score-row strong{font-size:2rem;letter-spacing:-.05em}
+    .info-wrap{position:relative;display:inline-grid;place-items:center;width:18px;height:18px;margin-left:6px;border-radius:999px;background:rgba(255,255,255,.08);font-size:11px;font-weight:700;color:var(--muted);cursor:help}
+    .tooltip{position:absolute;left:50%;bottom:calc(100% + 10px);transform:translateX(-50%) translateY(8px);width:220px;padding:12px;border-radius:14px;background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow);font-size:12px;color:var(--muted);opacity:0;pointer-events:none;transition:.2s ease}
+    .info-wrap:hover .tooltip{opacity:1;transform:translateX(-50%) translateY(0)}
+    .score-list{display:grid;gap:12px;padding:0;margin:0;list-style:none}
+    .score-list li{display:flex;justify-content:space-between;gap:12px;font-size:14px}.score-list strong{font-size:14px}
+    .quest{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--border)}.quest:last-child{border-bottom:none}
+    .tag{padding:8px 10px;border-radius:999px;background:rgba(10,132,255,.1);color:#8cc4ff;font-size:12px;font-weight:700}
+    .section-title{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:18px}
+    .section-title h3,.section-title h4{margin:0;font-size:1.25rem;letter-spacing:-.04em}
+    .step-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+    .step-card{padding:14px;border-radius:18px;background:var(--surface-2);border:1px solid var(--border);min-height:92px;display:flex;flex-direction:column;justify-content:space-between;cursor:pointer;transition:.22s cubic-bezier(.2,.9,.2,1)}
+    .step-card:hover{transform:translateY(-2px);border-color:rgba(10,132,255,.24);box-shadow:0 12px 24px rgba(10,132,255,.08)}
+    .step-card.active{border-color:rgba(10,132,255,.36);background:rgba(10,132,255,.08)}
+    .step-card.done{border-color:rgba(48,209,88,.6);box-shadow:inset 0 0 0 1px rgba(48,209,88,.22),0 10px 20px rgba(48,209,88,.08)}
+    .step-card small{color:var(--muted) !important;font-size:11px;text-transform:uppercase;letter-spacing:.07em}
+    .step-card strong{font-size:13px;line-height:1.3;color:var(--text) !important}
+    .editor{margin-top:16px;display:grid;gap:12px}
+    .editor textarea{width:100%;min-height:180px;border:none;outline:none;padding:18px;border-radius:20px;background:var(--surface-2);border:1px solid var(--border);color:var(--text);resize:vertical}
+    .glow-btn{padding:16px 20px;border:none;border-radius:999px;background:linear-gradient(180deg,#3d9cff,var(--primary));color:#fff;font-weight:800;cursor:pointer;box-shadow:0 14px 30px rgba(10,132,255,.3), inset 0 1px 0 rgba(255,255,255,.18)}
+    .forecast-inputs{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+    .forecast-inputs label{display:grid;gap:8px;padding:14px;border-radius:18px;background:var(--surface-2);border:1px solid var(--border)}
+    .forecast-inputs span{font-size:12px;color:var(--muted)}
+    .forecast-inputs input{padding:12px 14px;border-radius:14px;background:var(--surface);border:1px solid var(--border);color:var(--text);outline:none}
+    .forecast-meta{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px}
+    .kpi{padding:16px;border-radius:20px;background:var(--surface-2);border:1px solid var(--border)}
+    .kpi small{display:block;color:var(--muted);font-size:12px;margin-bottom:10px}.kpi strong{font-size:1.2rem}
+    .output-row{display:flex;flex-wrap:wrap;gap:12px}
+    .download-btn{padding:14px 20px;border-radius:18px;font-weight:700;border:none;cursor:pointer;background:var(--primary);color:#fff;box-shadow:0 12px 26px rgba(10,132,255,.22)}
+    .contact-links{display:grid;gap:12px}
+    .contact-link{padding:16px;border-radius:18px;background:var(--surface-2);border:1px solid var(--border)}
+    @media(max-width:1100px){.shell,.grid-2{grid-template-columns:1fr}.sidebar{position:relative;height:auto}.hero-metrics,.forecast-meta,.step-grid{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:640px){.step-grid,.hero-metrics,.forecast-inputs,.forecast-meta{grid-template-columns:1fr}}
+  </style>
 </head>
 <body>
-  <p>BANKERX Startup Canvas — full prototype loading...</p>
-  <script>window.location.reload();</script>
+<div class="shell">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo">BX</div>
+      <div>
+        <h1>BANKERX</h1>
+        <span>Startup Canvas</span>
+      </div>
+    </div>
+    <nav class="nav">
+      <a class="active" onclick="scrollTo(0,0)">&#x2302; Dashboard</a>
+      <a onclick="document.getElementById('wizardSection').scrollIntoView({behavior:'smooth'})">&#x270D; Founder Wizard</a>
+      <a onclick="document.getElementById('forecastSection').scrollIntoView({behavior:'smooth'})">&#x1F4C8; Forecast</a>
+      <a onclick="document.getElementById('downloadSection').scrollIntoView({behavior:'smooth'})">&#x2193; Download</a>
+      <a onclick="document.getElementById('contactSection').scrollIntoView({behavior:'smooth'})">&#x2709; Contact</a>
+    </nav>
+    <button class="theme-toggle" id="themeToggle">
+      <span class="switch-label">Appearance</span>
+      <div class="switch-track"><div class="switch-thumb">&#x1F319;</div></div>
+    </button>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- HERO -->
+    <section class="card">
+      <div class="hero-head">
+        <div class="hero">
+          <span class="eyebrow">BANKERX STARTUP CANVAS</span>
+          <h2>the streamlined business plan blueprint for founders, builders &amp; disruptors</h2>
+        </div>
+        <div class="live-pill"><span class="live-dot"></span> Live</div>
+      </div>
+      <div class="hero-metrics">
+        <div class="metric"><span>Target MRR</span><strong id="heroMrr">R0</strong></div>
+        <div class="metric"><span>Last Month Revenue</span><strong id="heroRev">R0</strong></div>
+        <div class="metric"><span>Cash Burn</span><strong id="heroBurn">R0</strong></div>
+        <div class="metric"><span>Startup Capital</span><strong id="heroCapital">R0</strong></div>
+      </div>
+    </section>
+
+    <!-- READINESS + QUESTS -->
+    <div class="grid-2">
+      <div class="card readiness-card">
+        <span class="eyebrow">Business Readiness Score</span>
+        <div class="score-row">
+          <strong id="readinessScore">0%</strong>
+          <span class="info-wrap" tabindex="0">i<span class="tooltip">Score is based on how many of the 10 plan sections + elevator pitch + financial inputs you have completed.</span></span>
+        </div>
+        <ul class="score-list" id="scoreList"></ul>
+      </div>
+      <div class="card quest-card">
+        <span class="eyebrow">Founder Quests</span>
+        <div id="questList">
+          <div class="quest"><span>&#x270F; Write your elevator pitch</span><span class="tag" id="q1">Pending</span></div>
+          <div class="quest"><span>&#x1F4B0; Add financial inputs</span><span class="tag" id="q2">Pending</span></div>
+          <div class="quest"><span>&#x1F9E9; Complete all 10 sections</span><span class="tag" id="q3">Pending</span></div>
+          <div class="quest"><span>&#x1F4CA; Run your 5-year forecast</span><span class="tag" id="q4">Pending</span></div>
+          <div class="quest"><span>&#x2B50; Download your canvas</span><span class="tag" id="q5">Pending</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FOUNDER WIZARD -->
+    <section class="card" id="wizardSection">
+      <div class="section-title">
+        <h3>Founder Wizard</h3>
+        <span style="font-size:13px;color:var(--muted)">Click a section to edit &middot; Green border = saved</span>
+      </div>
+
+      <!-- ELEVATOR PITCH -->
+      <div style="margin-bottom:20px;padding:20px;border-radius:22px;background:var(--surface-2);border:1px solid var(--border)" id="elevatorCard">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:10px;font-weight:600">&#x1F3A4; 30-Second Elevator Pitch</div>
+        <textarea id="elevatorTextarea" placeholder="Describe your company and offering in 30 seconds. This will be used in your pitch deck..." style="width:100%;min-height:90px;border:none;outline:none;padding:14px;border-radius:16px;background:var(--surface);border:1px solid var(--border);color:var(--text);resize:vertical;font-size:14px"></textarea>
+        <button class="glow-btn" style="margin-top:12px;font-size:14px;padding:12px 20px" onclick="saveElevator()">Save section</button>
+      </div>
+
+      <!-- PLAN SECTIONS GRID -->
+      <div class="step-grid" id="stepGrid"></div>
+
+      <!-- EDITOR -->
+      <div class="editor" id="editorWrap" style="display:none">
+        <div style="font-size:14px;font-weight:600" id="editorLabel"></div>
+        <textarea id="sectionTextarea" placeholder="Start writing this section of your business plan..."></textarea>
+        <button class="glow-btn" onclick="saveSection()">Save section</button>
+      </div>
+    </section>
+
+    <!-- FORECAST -->
+    <section class="card" id="forecastSection">
+      <div class="section-title"><h3>Revenue vs Costs Forecast</h3></div>
+      <div class="forecast-inputs">
+        <label><span>Target MRR (R)</span><input type="number" id="targetMrrInput" placeholder="e.g. 50000" oninput="syncHeroMetrics();recomputeForecast()"></label>
+        <label><span>Startup Capital (R)</span><input type="number" id="startupCapitalInput" placeholder="e.g. 500000" oninput="syncHeroMetrics();recomputeForecast()"></label>
+        <label><span>Starting Monthly Revenue (R)</span><input type="number" id="startRevenueInput" placeholder="e.g. 10000" oninput="recomputeForecast()"></label>
+        <label><span>Starting Monthly Costs (R)</span><input type="number" id="startCostInput" placeholder="e.g. 8000" oninput="syncHeroMetrics();recomputeForecast()"></label>
+        <label><span>Annual Revenue Growth (%)</span><input type="number" id="revenueGrowthInput" placeholder="e.g. 40" oninput="recomputeForecast()"></label>
+        <label><span>Annual Cost Growth (%)</span><input type="number" id="costGrowthInput" placeholder="e.g. 20" oninput="recomputeForecast()"></label>
+      </div>
+      <div class="forecast-meta" id="forecastMeta">
+        <div class="kpi"><small>Breakeven Year</small><strong id="kpiBreakeven">--</strong></div>
+        <div class="kpi"><small>Year 5 Revenue</small><strong id="kpiY5Rev">--</strong></div>
+        <div class="kpi"><small>Year 5 Profit</small><strong id="kpiY5Profit">--</strong></div>
+        <div class="kpi"><small>Runway (months)</small><strong id="kpiRunway">--</strong></div>
+      </div>
+      <canvas id="forecastChart" style="margin-top:20px;max-height:320px"></canvas>
+    </section>
+
+    <!-- LIVE PLAN STATE -->
+    <section class="card" id="livePlanState">
+      <div class="section-title"><h3>Live Plan State</h3></div>
+      <div id="planSummaryGrid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px"></div>
+    </section>
+
+    <!-- DOWNLOAD -->
+    <section class="card" id="downloadSection">
+      <div class="section-title"><h3>Download Output</h3></div>
+      <p style="color:var(--muted);font-size:14px;margin-bottom:16px">Download your completed canvas as a shareable image. Open this page in a browser tab for best results.</p>
+      <div class="output-row">
+        <button class="download-btn" id="exportImageBtn">Download Canvas</button>
+      </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section class="card" id="contactSection">
+      <div class="section-title"><h3>Pitch us your cool business ideas</h3></div>
+      <div class="contact-links">
+        <div class="contact-link">&#x2709; <a href="mailto:contact@bankerx.co.za" style="color:var(--primary)">contact@bankerx.co.za</a></div>
+        <div class="contact-link">&#x1F310; <a href="https://www.bankerx.org" target="_blank" rel="noopener noreferrer" style="color:var(--primary)">www.bankerx.org</a></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+  const sections = [
+    {id:'problem',title:'Problem Statement'},
+    {id:'solution',title:'Solution & Unique Value'},
+    {id:'opportunity',title:'Size of Opportunity'},
+    {id:'market',title:'Target Market'},
+    {id:'revenue',title:'Revenue Drivers'},
+    {id:'costs',title:'Cost Structure'},
+    {id:'marketing',title:'Marketing & Distribution'},
+    {id:'activities',title:'Key Activities & Partners'},
+    {id:'risks',title:'Risks & Competition'},
+    {id:'funding',title:'Funding'}
+  ];
+
+  const sectionDrafts = {};
+  const sectionSaved = {};
+  let activeSection = null;
+  let forecastChartInstance = null;
+
+  // DOM refs
+  const stepGrid = document.getElementById('stepGrid');
+  const editorWrap = document.getElementById('editorWrap');
+  const editorLabel = document.getElementById('editorLabel');
+  const sectionTextarea = document.getElementById('sectionTextarea');
+  const readinessScore = document.getElementById('readinessScore');
+  const scoreList = document.getElementById('scoreList');
+  const planSummaryGrid = document.getElementById('planSummaryGrid');
+  const themeToggle = document.getElementById('themeToggle');
+  const exportImageBtn = document.getElementById('exportImageBtn');
+  const elevatorTextarea = document.getElementById('elevatorTextarea');
+  const elevatorCard = document.getElementById('elevatorCard');
+  const targetMrrInput = document.getElementById('targetMrrInput');
+  const startupCapitalInput = document.getElementById('startupCapitalInput');
+  const startRevenueInput = document.getElementById('startRevenueInput');
+  const startCostInput = document.getElementById('startCostInput');
+  const revenueGrowthInput = document.getElementById('revenueGrowthInput');
+  const costGrowthInput = document.getElementById('costGrowthInput');
+
+  function fmt(n){ return 'R' + Number(n).toLocaleString(); }
+
+  function renderSteps(){
+    stepGrid.innerHTML = sections.map((s,i) => `
+      <div class="step-card ${activeSection===s.id?'active':''} ${sectionSaved[s.id]?'done':''}" onclick="openSection('${s.id}')">
+        <small>${String(i+1).padStart(2,'0')}</small>
+        <strong>${s.title}</strong>
+      </div>
+    `).join('');
+  }
+
+  function openSection(id){
+    activeSection = id;
+    const s = sections.find(x=>x.id===id);
+    editorLabel.textContent = s.title;
+    sectionTextarea.value = sectionDrafts[id] || '';
+    editorWrap.style.display = 'grid';
+    editorWrap.scrollIntoView({behavior:'smooth',block:'nearest'});
+    renderSteps();
+  }
+
+  function saveSection(){
+    if(!activeSection) return;
+    sectionDrafts[activeSection] = sectionTextarea.value.trim();
+    sectionSaved[activeSection] = !!sectionDrafts[activeSection];
+    renderSteps();
+    renderPlanSummary();
+    updateReadiness();
+    editorWrap.style.display = 'none';
+    activeSection = null;
+  }
+
+  function saveElevator(){
+    const val = elevatorTextarea.value.trim();
+    sectionDrafts['elevator'] = val;
+    sectionSaved['elevator'] = !!val;
+    elevatorCard.style.borderColor = val ? 'rgba(48,209,88,.6)' : '';
+    elevatorCard.style.boxShadow = val ? 'inset 0 0 0 1px rgba(48,209,88,.22),0 10px 20px rgba(48,209,88,.08)' : '';
+    updateReadiness();
+  }
+
+  function renderPlanSummary(){
+    planSummaryGrid.innerHTML = sections.map(s => `
+      <div style="padding:16px;border-radius:18px;background:var(--surface-2);border:1px solid ${sectionSaved[s.id]?'rgba(48,209,88,.5)':'var(--border)'}">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:8px;font-weight:600">${s.title}</div>
+        <div style="font-size:14px;line-height:1.5;color:${sectionDrafts[s.id]?'var(--text)':'var(--faint)'};font-style:${sectionDrafts[s.id]?'normal':'italic'}">${sectionDrafts[s.id]||'Not yet completed'}</div>
+      </div>
+    `).join('');
+  }
+
+  function updateReadiness(){
+    const total = sections.length + 3;
+    let done = sections.filter(s=>sectionSaved[s.id]).length;
+    if(sectionSaved['elevator']) done++;
+    if(targetMrrInput.value) done++;
+    if(startRevenueInput.value) done++;
+    const pct = Math.round((done/total)*100);
+    readinessScore.textContent = pct + '%';
+
+    // quests
+    const q = (id,ok) => { const el=document.getElementById(id); if(el){el.textContent=ok?'Done ✓':'Pending';el.style.background=ok?'rgba(48,209,88,.14)':'rgba(10,132,255,.1)';el.style.color=ok?'#baf7c4':'#8cc4ff';} };
+    q('q1', sectionSaved['elevator']);
+    q('q2', !!(targetMrrInput.value && startRevenueInput.value && startCostInput.value));
+    q('q3', sections.every(s=>sectionSaved[s.id]));
+    q('q4', !!(startRevenueInput.value && revenueGrowthInput.value));
+    q('q5', false);
+
+    // score list
+    scoreList.innerHTML = [
+      ['Elevator Pitch', sectionSaved['elevator']],
+      ['Financial Inputs', !!(targetMrrInput.value && startCostInput.value)],
+      ['Plan Sections', sections.filter(s=>sectionSaved[s.id]).length + '/' + sections.length],
+      ['Forecast Run', !!(startRevenueInput.value && revenueGrowthInput.value)]
+    ].map(([k,v]) => `<li><span>${k}</span><strong style="color:${v?'var(--success)':'var(--muted)'}">${typeof v==='string'?v:v?'Done ✓':'Pending'}</strong></li>`).join('');
+  }
+
+  function syncHeroMetrics(){
+    document.getElementById('heroMrr').textContent = fmt(targetMrrInput.value||0);
+    document.getElementById('heroRev').textContent = fmt(startRevenueInput.value||0);
+    document.getElementById('heroBurn').textContent = fmt(startCostInput.value||0);
+    document.getElementById('heroCapital').textContent = fmt(startupCapitalInput.value||0);
+    updateReadiness();
+  }
+
+  function recomputeForecast(){
+    syncHeroMetrics();
+    const startRev = Number(startRevenueInput.value||0) * 12;
+    const startCost = Number(startCostInput.value||0) * 12;
+    const rg = Number(revenueGrowthInput.value||0)/100;
+    const cg = Number(costGrowthInput.value||0)/100;
+    const capital = Number(startupCapitalInput.value||0);
+    const labels = ['Year 1','Year 2','Year 3','Year 4','Year 5'];
+    const revs=[], costs=[], profits=[];
+    let breakevenYr = '--', runway = '--';
+    let cumulativeLoss = 0;
+    for(let y=0;y<5;y++){
+      const r = Math.round(startRev * Math.pow(1+rg,y));
+      const c = Math.round(startCost * Math.pow(1+cg,y));
+      const p = r - c;
+      revs.push(r); costs.push(c); profits.push(p);
+      if(p>0 && breakevenYr==='--') breakevenYr='Year '+(y+1);
+      if(y===0 && p<0) cumulativeLoss = Math.abs(p);
+    }
+    if(capital>0 && cumulativeLoss>0) runway = Math.round((capital/cumulativeLoss)*12);
+    document.getElementById('kpiBreakeven').textContent = breakevenYr;
+    document.getElementById('kpiY5Rev').textContent = fmt(revs[4]||0);
+    document.getElementById('kpiY5Profit').textContent = fmt(profits[4]||0);
+    document.getElementById('kpiRunway').textContent = runway==='--'?'--':runway+' mo';
+    const ctx = document.getElementById('forecastChart').getContext('2d');
+    if(forecastChartInstance) forecastChartInstance.destroy();
+    forecastChartInstance = new Chart(ctx,{
+      type:'bar',
+      data:{
+        labels,
+        datasets:[
+          {label:'Revenue',data:revs,backgroundColor:'rgba(48,209,88,.7)',borderRadius:8},
+          {label:'Costs',data:costs,backgroundColor:'rgba(255,123,114,.6)',borderRadius:8},
+          {label:'Profit/Loss',data:profits,backgroundColor:'rgba(10,132,255,.55)',borderRadius:8,type:'line',fill:false,tension:.4,borderColor:'rgba(10,132,255,.9)',pointBackgroundColor:'rgba(10,132,255,1)'}
+        ]
+      },
+      options:{responsive:true,plugins:{legend:{labels:{color:getComputedStyle(document.body).getPropertyValue('--text')||'#f5f5f7'}}},scales:{x:{ticks:{color:getComputedStyle(document.body).getPropertyValue('--muted')||'#98989d'},grid:{color:'rgba(255,255,255,.05)'}},y:{ticks:{color:getComputedStyle(document.body).getPropertyValue('--muted')||'#98989d',callback:v=>'R'+v.toLocaleString()},grid:{color:'rgba(255,255,255,.05)'}}}}
+    });
+  }
+
+  // Export - only captures livePlanState section
+  exportImageBtn.addEventListener('click', async () => {
+    const target = document.getElementById('livePlanState');
+    if(!target){
+      alert('Could not find the Live Plan State section to export.');
+      return;
+    }
+    try {
+      const canvas = await html2canvas(target, { backgroundColor: null, scale: 2, useCORS: true, logging: false });
+      const link = document.createElement('a');
+      link.download = 'bankerx-startup-canvas.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      const q5 = document.getElementById('q5');
+      if(q5){ q5.textContent='Done ✓'; q5.style.background='rgba(48,209,88,.14)'; q5.style.color='#baf7c4'; }
+    } catch(e) {
+      alert('Export blocked in this preview. Open the HTML file in a browser tab and try again.');
+    }
+  });
+
+  themeToggle.addEventListener('click',()=>{
+    const h = document.documentElement;
+    const dark = h.getAttribute('data-theme')==='dark';
+    h.setAttribute('data-theme', dark?'light':'dark');
+    if(forecastChartInstance) recomputeForecast();
+  });
+
+  renderSteps();
+  renderPlanSummary();
+  recomputeForecast();
+</script>
 </body>
 </html>
